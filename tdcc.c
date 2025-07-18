@@ -22,6 +22,22 @@ struct Token {
 
 Token *token;
 
+typedef enum {
+    ND_ADD,
+    ND_SUB,
+    ND_MUL,
+    ND_DIV,
+    ND_NUM,
+} NodeKind;
+
+typedef struct Node Node;
+
+struct Node {
+    NodeKind kind;
+    Node *lhs, *rhs;
+    int val;
+};
+
 char *input;
 
 void error(char *fmt, ...) {
@@ -101,6 +117,87 @@ Token *tokenize(char *p) {
 
     new_token(TK_EOF, cur, p);
     return head.next;
+}
+
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = kind;
+    node->lhs = lhs;
+    node->rhs = rhs;
+    return node;
+}
+
+Node *new_node_num(int val) {
+    Node *node = new_node(ND_NUM, NULL, NULL);
+    node->val = val;
+    return node;
+}
+
+Node *expr() {
+    Node *node = term();
+
+    for (;;) {
+        if (consume('+')) {
+            node = new_node(ND_ADD, node, term());
+        } else if (consume('-')) {
+            node = new_node(ND_SUB, node, term());
+        } else {
+            return node;
+        }
+    }
+}
+
+Node *term() {
+    Node *node = factor();
+
+    for (;;) {
+        if (consume('*')) {
+            node = new_node(ND_MUL, node, factor());
+        } else if (consume('/')) {
+            node = new_node(ND_DIV, node, factor());
+        } else {
+            return node;
+        }
+    }
+}
+
+Node *factor() {
+    if (consume('(')) {
+        Node *node = expr();
+        expect(')');
+        return node;
+    }
+
+    return new_node_num(expect_number());
+}
+
+void dfs(Node *node) {
+    if (node->kind == ND_NUM) {
+        printf("  push %d\n", node->val);
+        return;
+    }
+
+    dfs(node->lhs);
+    dfs(node->rhs);
+
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+
+    switch (node->kind) {
+        case ND_ADD:
+            printf("  add rax, rdi\n");
+            break;
+        case ND_SUB:
+            printf("  sub rax, rdi\n");
+            break;
+        case ND_MUL:
+            printf("  imul rax, rdi\n");
+            break;
+        case ND_DIV:
+            printf("  cqo\n");  // rax を拡張
+            printf("  idiv rdi\n");
+            break;
+    }
 }
 
 int main(int argc, char **argv) {
