@@ -105,7 +105,7 @@ Token *tokenize(char *p) {
     while (*p != '\0') {
         if (isspace(*p)) {
             p++;
-        } else if (*p == '+' || *p == '-') {
+        } else if (strchr("+-*/()", *p) != NULL) {
             cur = new_token(TK_RESERVED, cur, p++);
         } else if (isdigit(*p)) {
             cur = new_token(TK_NUM, cur, p);
@@ -132,6 +132,10 @@ Node *new_node_num(int val) {
     node->val = val;
     return node;
 }
+
+Node *expr();
+Node *term();
+Node *factor();
 
 Node *expr() {
     Node *node = term();
@@ -198,32 +202,28 @@ void dfs(Node *node) {
             printf("  idiv rdi\n");
             break;
     }
+
+    printf("  push rax\n");
 }
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        fprintf(stderr, "Expected 2 arguments");
+        error("Expected 2 arguments");
         return 1;
     }
 
     input = argv[1];
     token = tokenize(argv[1]);
+    Node *node = expr();
 
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
 
-    printf("  mov rax, %d\n", expect_number());
+    dfs(node);
 
-    while (!at_eof()) {
-        if (consume('+')) {
-            printf("  add rax, %d\n", expect_number());
-        } else {
-            expect('-');
-            printf("  sub rax, %d\n", expect_number());
-        }
-    }
-
+    // スタックの先頭に最終的な答え
+    printf("  pop rax\n");
     printf("  ret\n");
     return 0;
 }
