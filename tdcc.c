@@ -18,6 +18,7 @@ struct Token {
     Token *next;
     int val;
     char *str;
+    int len;
 };
 
 Token *token;
@@ -135,6 +136,7 @@ Node *new_node_num(int val) {
 
 Node *expr();
 Node *term();
+Node *unary();
 Node *factor();
 
 Node *expr() {
@@ -152,17 +154,27 @@ Node *expr() {
 }
 
 Node *term() {
-    Node *node = factor();
+    Node *node = unary();
 
     for (;;) {
         if (consume('*')) {
-            node = new_node(ND_MUL, node, factor());
+            node = new_node(ND_MUL, node, unary());
         } else if (consume('/')) {
-            node = new_node(ND_DIV, node, factor());
+            node = new_node(ND_DIV, node, unary());
         } else {
             return node;
         }
     }
+}
+
+Node *unary() {
+    if (consume('+')) {
+        return factor();
+    }
+    if (consume('-')) {
+        return new_node(ND_SUB, new_node_num(0), factor());
+    }
+    return factor();
 }
 
 Node *factor() {
