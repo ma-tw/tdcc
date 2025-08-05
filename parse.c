@@ -3,6 +3,8 @@
 char *input;
 Token *token;
 
+LVar *locals;
+
 void error(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -83,8 +85,10 @@ Token *tokenize(char *p) {
             p += 2;
         } else if (strchr("<>+-*/()=;", *p) != NULL) {  // 1文字記号
             cur = new_token(TK_RESERVED, cur, p++, 1);
-        } else if ('a' <= *p && *p <= 'z') {
-            cur = new_token(TK_IDENT, cur, p++, 1);
+        } else if (isalpha(*p) || *p == '_') {
+            char *start = p;
+            while (isalnum(*p) || *p == '_') p++;
+            cur = new_token(TK_IDENT, cur, start, p - start);
         } else if (isdigit(*p)) {
             cur = new_token(TK_NUM, cur, p, -1);
             cur->val = strtol(p, &p, 10);
@@ -95,6 +99,15 @@ Token *tokenize(char *p) {
 
     new_token(TK_EOF, cur, p, -1);
     return head.next;
+}
+
+LVar *find_lvar(Token *tok) {
+    for (LVar *var = locals; var; var = var->next) {
+        if (var->len == tok->len && strncmp(tok->str, var->name, var->len) == 0) {
+            return var;
+        }
+    }
+    return NULL;
 }
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
@@ -215,7 +228,20 @@ Node *factor() {
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar) {
+            node->offset = lvar->offset;
+        } else {
+            lvar = calloc(1, sizeof(LVar));
+            // lvar を先頭にして2番目を今までの locals に
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = locals->offset + 8;
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
 

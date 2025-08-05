@@ -36,8 +36,11 @@ assert 1 '1 >= 1 != 1 > 1;'
 assert 2 '(12 > 10) + (12 <= 10) + (0 > -10);'
 # vars
 assert 3 'a = 3; a;'
-assert 20 'a = 2; b = a + 8; 2 * b;'
-assert 2 'a = 0; a = a + 1; a = a + 1;'
-assert 8 'a = b = c = 2; d = (a + b) * c;'
+assert 3 'foo = 3; foo;'
+assert 20 'hoge = 2; fuga = hoge + 8; 2 * fuga;'
+assert 2 'num = 0; num = num + 1; num = num + 1;'
+assert 8 'a_ = _b = _0 = 2; d0 = (a_ + _b) * _0;'
+assert 1 'sum = 1 + 2 + 3 + 4 + 5; fm = (1 + 5) * 5 / 2; sum == fm;'
+assert 1 'a = 5; b = a + 1; c = a - 1; gtres = b > a; ltres = c < a; gtres * ltres;'
 
 echo OK

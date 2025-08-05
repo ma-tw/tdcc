@@ -8,16 +8,22 @@ int main(int argc, char **argv) {
 
     input = argv[1];
     token = tokenize(argv[1]);
+    locals = calloc(1, sizeof(LVar));
+    locals->len = -1;  // sentinel
 
     program();
 
+    int locals_count = 0;
+    for (LVar *var = locals; var; var = var->next) locals_count++;
+    locals_count--;  // sentinel
+    
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
 
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");  // 26 * 8
+    printf("  sub rsp, %d\n", 8 * locals_count);
     for (int i = 0; code[i]; i++) {
         dfs(code[i]);
         printf("  pop rax\n");
