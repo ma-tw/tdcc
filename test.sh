@@ -42,5 +42,9 @@ assert 2 'num = 0; num = num + 1; num = num + 1;'
 assert 8 'a_ = _b = _0 = 2; d0 = (a_ + _b) * _0;'
 assert 1 'sum = 1 + 2 + 3 + 4 + 5; fm = (1 + 5) * 5 / 2; sum == fm;'
 assert 1 'a = 5; b = a + 1; c = a - 1; gtres = b > a; ltres = c < a; gtres * ltres;'
+# return
+assert 0 'return 0;'
+assert 12 'a = 12; return a; return 0;'
+assert 3 'a = 0; return a = 3;'
 
 echo OK

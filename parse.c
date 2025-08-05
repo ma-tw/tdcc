@@ -85,6 +85,9 @@ Token *tokenize(char *p) {
             p += 2;
         } else if (strchr("<>+-*/()=;", *p) != NULL) {  // 1文字記号
             cur = new_token(TK_RESERVED, cur, p++, 1);
+        } else if (strlen(p) >= 6 && strncmp(p, "return", 6) == 0 && !isalnum(p[6]) && p[6] != '_') {
+            cur = new_token(TK_RESERVED, cur, p, 6);
+            p += 6;
         } else if (isalpha(*p) || *p == '_') {
             char *start = p;
             while (isalnum(*p) || *p == '_') p++;
@@ -131,7 +134,9 @@ void program() {
 }
 
 Node *stmt() {
-    Node *node = expr();
+    Node *node;
+    if (consume("return")) node = new_node(ND_RETURN, expr(), NULL);
+    else node = expr();
     expect(";");
     return node;
 }

@@ -38,6 +38,7 @@ extern Token *token;
 typedef enum {
     ND_ASSIGN,
     ND_LVAR,
+    ND_RETURN,
     ND_EQ,
     ND_NE,
     ND_LT,
