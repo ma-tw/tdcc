@@ -46,5 +46,14 @@ assert 1 'a = 5; b = a + 1; c = a - 1; gtres = b > a; ltres = c < a; gtres * ltr
 assert 0 'return 0;'
 assert 12 'a = 12; return a; return 0;'
 assert 3 'a = 0; return a = 3;'
+assert 2 'x = 1; returnx = 2; return returnx;'
+# if
+assert 2 'x = 0; if (1) x = 2; return x; return 99;'
+assert 3 'if (0) return 2; else return 3; return 99;'
+assert 3 'if (1) if (0) return 2; else return 3; return 99;'
+assert 99 'if (0) if (0) return 2; else return 3; return 99;'
+assert 4 'if (1) if (0) if (0) return 2; else return 3; else return 4; return 99;'
+assert 99 'if (0) if (0) if (0) return 2; else return 3; else return 4; return 99;'
+assert 22 'age = 17; limit = 0; if (age < 16) limit = 18; else if (age < 18) limit = 22; else limit = 24; return limit;'
 
 echo OK

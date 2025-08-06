@@ -39,6 +39,7 @@ typedef enum {
     ND_ASSIGN,
     ND_LVAR,
     ND_RETURN,
+    ND_IF,
     ND_EQ,
     ND_NE,
     ND_LT,
@@ -54,7 +55,7 @@ typedef struct Node Node;
 
 struct Node {
     NodeKind kind;
-    Node *lhs, *rhs;
+    Node *lhs, *rhs, *third, *fourth;  // third, fourth: else, for
     int val;    // kind が ND_NUM の場合のみ
     int offset; // kind が ND_LVAR の場合のみ
 };
@@ -69,6 +70,8 @@ int expect_number();
 bool at_eof();
 
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
+
+bool is_alnum_us(char p);
 
 Token *tokenize(char *p);
 
@@ -85,6 +88,8 @@ Node *sum();
 Node *term();
 Node *unary();
 Node *factor();
+
+extern int jump_count;
 
 void dfs(Node *node);
 

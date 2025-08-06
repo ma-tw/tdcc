@@ -72,6 +72,10 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     return ret;
 }
 
+bool is_alnum_us(char p) {
+    return isalnum(p) || p == '_';
+}
+
 Token *tokenize(char *p) {
     Token head;
     head.next = NULL;
@@ -85,12 +89,18 @@ Token *tokenize(char *p) {
             p += 2;
         } else if (strchr("<>+-*/()=;", *p) != NULL) {  // 1文字記号
             cur = new_token(TK_RESERVED, cur, p++, 1);
-        } else if (strlen(p) >= 6 && strncmp(p, "return", 6) == 0 && !isalnum(p[6]) && p[6] != '_') {
+        } else if (strlen(p) >= 6 && strncmp(p, "return", 6) == 0 && !is_alnum_us(p[6])) {
             cur = new_token(TK_RESERVED, cur, p, 6);
             p += 6;
+        } else if (strlen(p) >= 2 && strncmp(p, "if", 2) == 0 && !is_alnum_us(p[2])) {
+            cur = new_token(TK_RESERVED, cur, p, 2);
+            p += 2;
+        } else if (strlen(p) >= 4 && strncmp(p, "else", 4) == 0 && !is_alnum_us(p[4])) {
+            cur = new_token(TK_RESERVED, cur, p, 4);
+            p += 4;
         } else if (isalpha(*p) || *p == '_') {
             char *start = p;
-            while (isalnum(*p) || *p == '_') p++;
+            while (is_alnum_us(*p)) p++;
             cur = new_token(TK_IDENT, cur, start, p - start);
         } else if (isdigit(*p)) {
             cur = new_token(TK_NUM, cur, p, -1);
@@ -135,9 +145,29 @@ void program() {
 
 Node *stmt() {
     Node *node;
-    if (consume("return")) node = new_node(ND_RETURN, expr(), NULL);
-    else node = expr();
-    expect(";");
+    if (consume("if")) {
+        expect("(");
+        Node *cond = expr();
+        expect(")");
+        Node *true_stmt = stmt();
+        Node *false_stmt = NULL;
+        if (consume("else")) {
+            false_stmt = stmt();
+        }
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_IF;
+        node->lhs = cond;
+        node->rhs = true_stmt;
+        node->third = false_stmt;
+    }
+    else if (consume("return")) {
+        node = new_node(ND_RETURN, expr(), NULL);
+        expect(";");
+    }
+    else {
+        node = expr();
+        expect(";");
+    }
     return node;
 }
 
