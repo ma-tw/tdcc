@@ -76,6 +76,11 @@ bool is_alnum_us(char p) {
     return isalnum(p) || p == '_';
 }
 
+bool matches(char *p, char *keyword) {
+    int kwlen = strlen(keyword);
+    return strlen(p) >= kwlen && strncmp(p, keyword, kwlen) == 0;
+}
+
 Token *tokenize(char *p) {
     Token head;
     head.next = NULL;
@@ -84,20 +89,23 @@ Token *tokenize(char *p) {
     while (*p != '\0') {
         if (isspace(*p)) {
             p++;
-        } else if (strlen(p) >= 2 && (strncmp(p, "==", 2) == 0 || strncmp(p, "!=", 2) == 0 || strncmp(p, "<=", 2) == 0 || strncmp(p, ">=", 2) == 0)) {
+        } else if (matches(p, "==") || matches(p, "!=") || matches(p, "<=") || matches(p, ">=")) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
         } else if (strchr("<>+-*/()=;", *p) != NULL) {  // 1文字記号
             cur = new_token(TK_RESERVED, cur, p++, 1);
-        } else if (strlen(p) >= 6 && strncmp(p, "return", 6) == 0 && !is_alnum_us(p[6])) {
+        } else if (matches(p, "return") && !is_alnum_us(p[6])) {
             cur = new_token(TK_RESERVED, cur, p, 6);
             p += 6;
-        } else if (strlen(p) >= 2 && strncmp(p, "if", 2) == 0 && !is_alnum_us(p[2])) {
+        } else if (matches(p, "if") && !is_alnum_us(p[2])) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
-        } else if (strlen(p) >= 4 && strncmp(p, "else", 4) == 0 && !is_alnum_us(p[4])) {
+        } else if (matches(p, "else") && !is_alnum_us(p[4])) {
             cur = new_token(TK_RESERVED, cur, p, 4);
             p += 4;
+        } else if (matches(p, "while") && !is_alnum_us(p[5])) {
+            cur = new_token(TK_RESERVED, cur, p, 5);
+            p += 5;
         } else if (isalpha(*p) || *p == '_') {
             char *start = p;
             while (is_alnum_us(*p)) p++;
@@ -159,12 +167,16 @@ Node *stmt() {
         node->lhs = cond;
         node->rhs = true_stmt;
         node->third = false_stmt;
-    }
-    else if (consume("return")) {
+    } else if (consume("while")) {
+        expect("(");
+        Node *cond = expr();
+        expect(")");
+        Node *loop_stmt = stmt();
+        node = new_node(ND_WHILE, cond, loop_stmt);
+    } else if (consume("return")) {
         node = new_node(ND_RETURN, expr(), NULL);
         expect(";");
-    }
-    else {
+    } else {
         node = expr();
         expect(";");
     }

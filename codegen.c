@@ -12,6 +12,7 @@ void gen_lval(Node *node) {
 int jump_count;
 
 void dfs(Node *node) {
+    int begin_label, end_label, else_label;
     switch (node->kind) {
         case ND_NUM:
             printf("# ND_NUM\n");
@@ -47,7 +48,6 @@ void dfs(Node *node) {
             dfs(node->lhs);
             printf("  pop rax\n");
             printf("  cmp rax, 0\n");
-            int else_label, end_label;
             if (node->third) {
                 else_label = jump_count++;
                 printf("  je .Lelse%d\n", else_label);
@@ -63,6 +63,19 @@ void dfs(Node *node) {
                 dfs(node->rhs);
                 printf(".Lend%d:\n", end_label);
             }
+            return;
+        case ND_WHILE:
+            printf("# ND_WHILE\n");
+            begin_label = jump_count++;
+            printf(".Lbegin%d:\n", begin_label);
+            dfs(node->lhs);
+            printf("  pop rax\n");
+            printf("  cmp rax, 0\n");
+            end_label = jump_count++;
+            printf("  je .Lend%d\n", end_label);
+            dfs(node->rhs);
+            printf("  jmp .Lbegin%d\n", begin_label);
+            printf(".Lend%d:\n", end_label);
             return;
             
         default:

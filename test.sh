@@ -55,5 +55,8 @@ assert 99 'if (0) if (0) return 2; else return 3; return 99;'
 assert 4 'if (1) if (0) if (0) return 2; else return 3; else return 4; return 99;'
 assert 99 'if (0) if (0) if (0) return 2; else return 3; else return 4; return 99;'
 assert 22 'age = 17; limit = 0; if (age < 16) limit = 18; else if (age < 18) limit = 22; else limit = 24; return limit;'
+# while
+assert 4 'x = 10; while (x >= 5) x = x - 1; return x;'
+assert 3 'x = 9; while (x >= 5) x = x - 2; return x;'
 
 echo OK

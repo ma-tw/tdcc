@@ -40,6 +40,7 @@ typedef enum {
     ND_LVAR,
     ND_RETURN,
     ND_IF,
+    ND_WHILE,
     ND_EQ,
     ND_NE,
     ND_LT,
@@ -72,6 +73,7 @@ bool at_eof();
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 
 bool is_alnum_us(char p);
+bool matches(char *p, char *keyword);
 
 Token *tokenize(char *p);
 
