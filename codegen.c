@@ -77,7 +77,27 @@ void dfs(Node *node) {
             printf("  jmp .Lbegin%d\n", begin_label);
             printf(".Lend%d:\n", end_label);
             return;
-            
+        case ND_FOR:
+            printf("# ND_FOR\n");
+            if (node->lhs) {
+                dfs(node->lhs);
+            }
+            begin_label = jump_count++;
+            printf(".Lbegin%d:\n", begin_label);
+            if (node->rhs) {
+                dfs(node->rhs);
+                printf("  pop rax\n");
+                printf("  cmp rax, 0\n");
+            }
+            end_label = jump_count++;
+            printf("  je .Lend%d\n", end_label);
+            dfs(node->fourth);
+            if (node->third) {
+                dfs(node->third);
+            }
+            printf("  jmp .Lbegin%d\n", begin_label);
+            printf(".Lend%d:\n", end_label);
+            return;
         default:
             ;
     }

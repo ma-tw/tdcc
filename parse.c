@@ -106,6 +106,9 @@ Token *tokenize(char *p) {
         } else if (matches(p, "while") && !is_alnum_us(p[5])) {
             cur = new_token(TK_RESERVED, cur, p, 5);
             p += 5;
+        } else if (matches(p, "for") && !is_alnum_us(p[3])) {
+            cur = new_token(TK_RESERVED, cur, p, 3);
+            p += 3;
         } else if (isalpha(*p) || *p == '_') {
             char *start = p;
             while (is_alnum_us(*p)) p++;
@@ -173,6 +176,28 @@ Node *stmt() {
         expect(")");
         Node *loop_stmt = stmt();
         node = new_node(ND_WHILE, cond, loop_stmt);
+    } else if (consume("for")) {
+        expect("(");
+        Node *init = NULL, *cond = NULL, *update = NULL;
+        if (!consume(";")) {
+            init = expr();
+            expect(";");
+        }
+        if (!consume(";")) {
+            cond = expr();
+            expect(";");
+        }
+        if (!consume(")")) {
+            update = expr();
+            expect(")");
+        }
+        Node *loop_stmt = stmt();
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+        node->lhs = init;
+        node->rhs = cond;
+        node->third = update;
+        node->fourth = loop_stmt;
     } else if (consume("return")) {
         node = new_node(ND_RETURN, expr(), NULL);
         expect(";");

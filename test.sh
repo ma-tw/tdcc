@@ -58,5 +58,10 @@ assert 22 'age = 17; limit = 0; if (age < 16) limit = 18; else if (age < 18) lim
 # while
 assert 4 'x = 10; while (x >= 5) x = x - 1; return x;'
 assert 3 'x = 9; while (x >= 5) x = x - 2; return x;'
+# for
+assert 15 'x = 0; i = 10; for (i = 1; i <= 5; i = i + 1) x = x + i; return x;'
+assert 14 'x = 0; i = 2; for (; i <= 5; i = i + 1) x = x + i; return x;'
+assert 50 'x = -50; i = 1000; for (i = 0; ; i = i + 1) if (i == 100) return x + i; return 99;'
+assert 0 'i = 1; for (i = 0; i < 1; ) return 0; return 1;'
 
 echo OK
