@@ -33,5 +33,6 @@ int main(int argc, char **argv) {
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");
+	printf(".section .note.GNU-stack,\"\",@progbits\n");
     return 0;
 }
