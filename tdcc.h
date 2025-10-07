@@ -41,6 +41,7 @@ typedef enum {
     ND_RETURN,
     ND_IF,
     ND_WHILE,
+    ND_DO_WHILE,
     ND_FOR,
     ND_EQ,
     ND_NE,

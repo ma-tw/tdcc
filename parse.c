@@ -106,6 +106,9 @@ Token *tokenize(char *p) {
         } else if (matches(p, "while") && !is_alnum_us(p[5])) {
             cur = new_token(TK_RESERVED, cur, p, 5);
             p += 5;
+        } else if (matches(p, "do") && !is_alnum_us(p[2])) {
+            cur = new_token(TK_RESERVED, cur, p, 2);
+            p += 2;
         } else if (matches(p, "for") && !is_alnum_us(p[3])) {
             cur = new_token(TK_RESERVED, cur, p, 3);
             p += 3;
@@ -176,6 +179,14 @@ Node *stmt() {
         expect(")");
         Node *loop_stmt = stmt();
         node = new_node(ND_WHILE, cond, loop_stmt);
+    } else if (consume("do")) {
+        Node *loop_stmt = stmt();
+        expect("while");
+        expect("(");
+        Node *cond = expr();
+        expect(")");
+        expect(";");
+        node = new_node(ND_DO_WHILE, loop_stmt, cond);
     } else if (consume("for")) {
         expect("(");
         Node *init = NULL, *cond = NULL, *update = NULL;
