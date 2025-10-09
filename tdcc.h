@@ -58,7 +58,8 @@ typedef struct Node Node;
 
 struct Node {
     NodeKind kind;
-    Node *lhs, *rhs, *third, *fourth;  // third, fourth: else, for
+    int child_count;
+    Node **children;
     int val;    // kind が ND_NUM の場合のみ
     int offset; // kind が ND_LVAR の場合のみ
 };
@@ -79,7 +80,7 @@ bool matches(char *p, char *keyword);
 
 Token *tokenize(char *p);
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_node(NodeKind kind, int child_count, ...);
 Node *new_node_num(int val);
 
 void program();

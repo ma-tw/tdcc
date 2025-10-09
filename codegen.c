@@ -27,8 +27,8 @@ void dfs(Node *node) {
             return;
         case ND_ASSIGN:
             printf("# ND_ASSIGN\n");
-            gen_lval(node->lhs);
-            dfs(node->rhs);
+            gen_lval(node->children[0]);
+            dfs(node->children[1]);
 
             printf("  pop rdi\n");
             printf("  pop rax\n");
@@ -37,7 +37,7 @@ void dfs(Node *node) {
             return;
         case ND_RETURN:
             printf("# ND_RETURN\n");
-            dfs(node->lhs);
+            dfs(node->children[0]);
             printf("  pop rax\n");
             printf("  mov rsp, rbp\n");
             printf("  pop rbp\n");
@@ -45,22 +45,22 @@ void dfs(Node *node) {
             return;
         case ND_IF:
             printf("# ND_IF\n");
-            dfs(node->lhs);
+            dfs(node->children[0]);
             printf("  pop rax\n");
             printf("  cmp rax, 0\n");
-            if (node->third) {
+            if (node->children[2]) {
                 else_label = jump_count++;
                 printf("  je .Lelse%d\n", else_label);
-                dfs(node->rhs);
+                dfs(node->children[1]);
                 end_label = jump_count++;
                 printf("  jmp .Lend%d\n", end_label);
                 printf(".Lelse%d:\n", else_label);
-                dfs(node->third);
+                dfs(node->children[2]);
                 printf(".Lend%d:\n", end_label);
             } else {
                 end_label = jump_count++;
                 printf("  je .Lend%d\n", end_label);
-                dfs(node->rhs);
+                dfs(node->children[1]);
                 printf(".Lend%d:\n", end_label);
             }
             return;
@@ -68,12 +68,12 @@ void dfs(Node *node) {
             printf("# ND_WHILE\n");
             begin_label = jump_count++;
             printf(".Lbegin%d:\n", begin_label);
-            dfs(node->lhs);
+            dfs(node->children[0]);
             printf("  pop rax\n");
             printf("  cmp rax, 0\n");
             end_label = jump_count++;
             printf("  je .Lend%d\n", end_label);
-            dfs(node->rhs);
+            dfs(node->children[1]);
             printf("  jmp .Lbegin%d\n", begin_label);
             printf(".Lend%d:\n", end_label);
             return;
@@ -81,29 +81,29 @@ void dfs(Node *node) {
             printf("# ND_DO_WHILE\n");
             begin_label = jump_count++;
             printf(".Lbegin%d:\n", begin_label);
-            dfs(node->lhs);
-            dfs(node->rhs);
+            dfs(node->children[0]);
+            dfs(node->children[1]);
             printf("  pop rax\n");
             printf("  cmp rax, 0\n");
             printf("  jne .Lbegin%d\n", begin_label);
             return;
         case ND_FOR:
             printf("# ND_FOR\n");
-            if (node->lhs) {
-                dfs(node->lhs);
+            if (node->children[0]) {
+                dfs(node->children[0]);
             }
             begin_label = jump_count++;
             printf(".Lbegin%d:\n", begin_label);
-            if (node->rhs) {
-                dfs(node->rhs);
+            if (node->children[1]) {
+                dfs(node->children[1]);
                 printf("  pop rax\n");
                 printf("  cmp rax, 0\n");
             }
             end_label = jump_count++;
             printf("  je .Lend%d\n", end_label);
-            dfs(node->fourth);
-            if (node->third) {
-                dfs(node->third);
+            dfs(node->children[3]);
+            if (node->children[2]) {
+                dfs(node->children[2]);
             }
             printf("  jmp .Lbegin%d\n", begin_label);
             printf(".Lend%d:\n", end_label);
@@ -112,8 +112,8 @@ void dfs(Node *node) {
             ;
     }
 
-    dfs(node->lhs);
-    dfs(node->rhs);
+    dfs(node->children[0]);
+    dfs(node->children[1]);
 
     printf("  pop rdi\n");
     printf("  pop rax\n");

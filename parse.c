@@ -137,16 +137,24 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
+Node *new_node(NodeKind kind, int child_count, ...) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
-    node->lhs = lhs;
-    node->rhs = rhs;
+    node->child_count = child_count;
+    if (child_count > 0) {
+        node->children = calloc(child_count, sizeof(Node *));
+        va_list ap;
+        va_start(ap, child_count);
+        for (int i = 0; i < child_count; i++) {
+            node->children[i] = va_arg(ap, Node *);
+        }
+        va_end(ap);
+    }
     return node;
 }
 
 Node *new_node_num(int val) {
-    Node *node = new_node(ND_NUM, NULL, NULL);
+    Node *node = new_node(ND_NUM, 0);
     node->val = val;
     return node;
 }
@@ -168,17 +176,13 @@ Node *stmt() {
         if (consume("else")) {
             false_stmt = stmt();
         }
-        node = calloc(1, sizeof(Node));
-        node->kind = ND_IF;
-        node->lhs = cond;
-        node->rhs = true_stmt;
-        node->third = false_stmt;
+        node = new_node(ND_IF, 3, cond, true_stmt, false_stmt);
     } else if (consume("while")) {
         expect("(");
         Node *cond = expr();
         expect(")");
         Node *loop_stmt = stmt();
-        node = new_node(ND_WHILE, cond, loop_stmt);
+        node = new_node(ND_WHILE, 2, cond, loop_stmt);
     } else if (consume("do")) {
         Node *loop_stmt = stmt();
         expect("while");
@@ -186,7 +190,7 @@ Node *stmt() {
         Node *cond = expr();
         expect(")");
         expect(";");
-        node = new_node(ND_DO_WHILE, loop_stmt, cond);
+        node = new_node(ND_DO_WHILE, 2, loop_stmt, cond);
     } else if (consume("for")) {
         expect("(");
         Node *init = NULL, *cond = NULL, *update = NULL;
@@ -203,14 +207,9 @@ Node *stmt() {
             expect(")");
         }
         Node *loop_stmt = stmt();
-        node = calloc(1, sizeof(Node));
-        node->kind = ND_FOR;
-        node->lhs = init;
-        node->rhs = cond;
-        node->third = update;
-        node->fourth = loop_stmt;
+        node = new_node(ND_FOR, 4, init, cond, update, loop_stmt);
     } else if (consume("return")) {
-        node = new_node(ND_RETURN, expr(), NULL);
+        node = new_node(ND_RETURN, 2, expr(), NULL);
         expect(";");
     } else {
         node = expr();
@@ -226,7 +225,7 @@ Node *expr() {
 
 Node *assign() {
     Node *node = equality();
-    if (consume("=")) node = new_node(ND_ASSIGN, node, assign());
+    if (consume("=")) node = new_node(ND_ASSIGN, 2, node, assign());
     return node;
 }
 
@@ -235,9 +234,9 @@ Node *equality() {
 
     for (;;) {
         if (consume("==")) {
-            node = new_node(ND_EQ, node, relational());
+            node = new_node(ND_EQ, 2, node, relational());
         } else if (consume("!=")) {
-            node = new_node(ND_NE, node, relational());
+            node = new_node(ND_NE, 2, node, relational());
         } else {
             return node;
         }
@@ -249,13 +248,13 @@ Node *relational() {
 
     for (;;) {
         if (consume("<")) {
-            node = new_node(ND_LT, node, sum());
+            node = new_node(ND_LT, 2, node, sum());
         } else if (consume("<=")) {
-            node = new_node(ND_LE, node, sum());
+            node = new_node(ND_LE, 2, node, sum());
         } else if (consume(">")) {
-            node = new_node(ND_LT, sum(), node);
+            node = new_node(ND_LT, 2, sum(), node);
         } else if (consume(">=")) {
-            node = new_node(ND_LE, sum(), node);
+            node = new_node(ND_LE, 2, sum(), node);
         } else {
             return node;
         }
@@ -267,9 +266,9 @@ Node *sum() {
 
     for (;;) {
         if (consume("+")) {
-            node = new_node(ND_ADD, node, term());
+            node = new_node(ND_ADD, 2, node, term());
         } else if (consume("-")) {
-            node = new_node(ND_SUB, node, term());
+            node = new_node(ND_SUB, 2, node, term());
         } else {
             return node;
         }
@@ -281,9 +280,9 @@ Node *term() {
 
     for (;;) {
         if (consume("*")) {
-            node = new_node(ND_MUL, node, unary());
+            node = new_node(ND_MUL, 2, node, unary());
         } else if (consume("/")) {
-            node = new_node(ND_DIV, node, unary());
+            node = new_node(ND_DIV, 2, node, unary());
         } else {
             return node;
         }
@@ -295,7 +294,7 @@ Node *unary() {
         return factor();
     }
     if (consume("-")) {
-        return new_node(ND_SUB, new_node_num(0), factor());
+        return new_node(ND_SUB, 2, new_node_num(0), factor());
     }
     return factor();
 }
