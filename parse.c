@@ -92,7 +92,7 @@ Token *tokenize(char *p) {
         } else if (matches(p, "==") || matches(p, "!=") || matches(p, "<=") || matches(p, ">=")) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
-        } else if (strchr("<>+-*/()=;", *p) != NULL) {  // 1文字記号
+        } else if (strchr("<>+-*/(){}=;", *p) != NULL) {  // 1文字記号
             cur = new_token(TK_RESERVED, cur, p++, 1);
         } else if (matches(p, "return") && !is_alnum_us(p[6])) {
             cur = new_token(TK_RESERVED, cur, p, 6);
@@ -150,6 +150,14 @@ Node *new_node(NodeKind kind, int child_count, ...) {
         }
         va_end(ap);
     }
+    return node;
+}
+
+Node *new_node_vec(NodeKind kind, int child_count, Node **vec) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = kind;
+    node->child_count = child_count;
+    node->children = vec;
     return node;
 }
 
@@ -211,6 +219,14 @@ Node *stmt() {
     } else if (consume("return")) {
         node = new_node(ND_RETURN, 2, expr(), NULL);
         expect(";");
+    } else if (consume("{")) {
+        int stmt_count = 0;
+        Node **block = calloc(1, sizeof(Node *));
+        while (!consume("}")) {
+            block = realloc(block, ++stmt_count * sizeof(Node *));
+            block[stmt_count - 1] = stmt();
+        }
+        node = new_node_vec(ND_BLOCK, stmt_count, block);
     } else {
         node = expr();
         expect(";");

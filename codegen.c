@@ -108,6 +108,13 @@ void dfs(Node *node) {
             printf("  jmp .Lbegin%d\n", begin_label);
             printf(".Lend%d:\n", end_label);
             return;
+        case ND_BLOCK:
+            printf("# ND_BLOCK\n");
+            for (int i = 0; i < node->child_count; i++) {
+                dfs(node->children[i]);
+                printf("  pop rax\n");
+            }
+            return;
         default:
             ;
     }

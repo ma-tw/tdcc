@@ -43,6 +43,7 @@ typedef enum {
     ND_WHILE,
     ND_DO_WHILE,
     ND_FOR,
+    ND_BLOCK,
     ND_EQ,
     ND_NE,
     ND_LT,
@@ -81,6 +82,7 @@ bool matches(char *p, char *keyword);
 Token *tokenize(char *p);
 
 Node *new_node(NodeKind kind, int child_count, ...);
+Node *new_node_vec(NodeKind kind, int child_count, Node **vec);
 Node *new_node_num(int val);
 
 void program();
